@@ -1,4 +1,5 @@
 const root = document.documentElement;
+const unit = () => parseFloat(getComputedStyle(root).fontSize) / 16;   // how far the page is scaled up on big screens
 const pages = [...document.querySelectorAll(".page")];
 const dots = [...document.querySelectorAll(".dots a")];
 const navLinks = [...document.querySelectorAll(".nav a")];
@@ -82,6 +83,7 @@ const LIFESPAN = 2000;
 
 document.addEventListener("click", (e) => {
   if (reduceMotion.matches) return;
+  const U = unit();
   if (e.target.closest("a, button, input, textarea, select, label, .topbar, .dots, .shape-toggle, .mode-toggle")) return;
 
   while (burst.childElementCount > 80) burst.firstElementChild.remove();
@@ -92,13 +94,13 @@ document.addEventListener("click", (e) => {
     const shape = ALL[Math.floor(Math.random() * ALL.length)];
     // evenly fanned out around the click, with jitter so it never looks uniform
     const angle = offset + (i / n) * Math.PI * 2 + (Math.random() - 0.5) * 0.7;
-    const dist = 110 + Math.random() * 150;
+    const dist = (110 + Math.random() * 150) * U;
     const dx = Math.cos(angle) * dist, dy = Math.sin(angle) * dist;
     const spin = (Math.random() - 0.5) * 360;
 
     const el = document.createElement("i");
     el.className = "b-" + shape;
-    el.style.width = el.style.height = 12 + Math.random() * 16 + "px";
+    el.style.width = el.style.height = (12 + Math.random() * 16) * U + "px";
     // the active theme's shape uses the darker theme tone so it never blends into the background
     el.style.background = shape === state.active ? "var(--slate-dark)"
       : shape === "square" && root.dataset.mode === "dark" ? "#84b0e6" : burstColors[shape];
@@ -243,6 +245,7 @@ function drift(now) {
   const kPointer = 1 - Math.exp(-dt / FOLLOW);
   const kShape = 1 - Math.exp(-dt / SETTLE);
   let busy = false;
+  const U = unit();
 
   // shapes react to a smoothed cursor, so quick mouse flicks never jerk them
   if (pointer) {
@@ -278,10 +281,10 @@ function drift(now) {
       const dx = r.left + r.width / 2 - d.x - soft.x;
       const dy = r.top + r.height / 2 - d.y - soft.y;
       const dist = Math.hypot(dx, dy) || 1;
-      const reach = 90 + r.width * 0.9;
+      const reach = 90 * U + r.width * 0.9;
       if (dist < reach) {
         const t = 1 - dist / reach;
-        const push = PUSH * t * t * (3 - 2 * t);   // smoothstep: gentle start, gentle finish
+        const push = PUSH * U * t * t * (3 - 2 * t);   // smoothstep: gentle start, gentle finish
         tx = (dx / dist) * push;
         ty = (dy / dist) * push;
       }
